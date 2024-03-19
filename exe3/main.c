@@ -9,7 +9,26 @@
 #include "data.h"
 QueueHandle_t xQueueData;
 
-// não mexer! Alimenta a fila com os dados do sinal
+// Implementação do filtro de média móvel
+#define WINDOW_SIZE 5
+int window[WINDOW_SIZE];
+int window_index = 0;
+
+int moving_average(int new_value) {
+    // Adiciona o novo valor ao vetor de janela
+    window[window_index] = new_value;
+    
+    // Atualiza o índice da janela circularmente
+    window_index = (window_index + 1) % WINDOW_SIZE;
+
+    // Calcula a média dos valores na janela
+    int sum = 0;
+    for (int i = 0; i < WINDOW_SIZE; i++) {
+        sum += window[i];
+    }
+    return sum / WINDOW_SIZE;
+}
+
 void data_task(void *p) {
     vTaskDelay(pdMS_TO_TICKS(400));
 
@@ -28,12 +47,13 @@ void process_task(void *p) {
 
     while (true) {
         if (xQueueReceive(xQueueData, &data, 100)) {
-            // implementar filtro aqui!
+            // Aplica o filtro de média móvel
+            int filtered_data = moving_average(data);
+            
+            // Imprime o dado filtrado na UART
+            printf("%d\n", filtered_data);
 
-
-
-
-            // deixar esse delay!
+            // Deixa este atraso
             vTaskDelay(pdMS_TO_TICKS(50));
         }
     }
